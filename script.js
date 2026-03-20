@@ -1,6 +1,22 @@
 const products = [
   {
     id: 1,
+    name: "សាប៊ូកក់&ស្បាសក់ JELY",
+    price: 15,
+    category: "Hair",
+    image: "images/products/hair/សាប៊ូកក់សក់ និងស្បាសក់ JELY.png",
+    detail: "សាប៊ូកក់សក់ និងស្បាសក់ JELY"
+  },
+  {
+    id: 2,
+    name: "សាប៊ូកក់&ម៉ាសសក់ CCR",
+    price: 16,
+    category: "Hair",
+    image: "images/products/hair/សាប៊ូកក់សក់ និងម៉ាសសក់ CCR.png",
+    detail: "សាប៊ូកក់ និងម៉ាសសក់ CCR"
+  },
+  {
+    id: 3,
     name: "ស្ព្រាយបាញ់សក់ CCR",
     price: 10,
     category: "Hair",
@@ -8,31 +24,23 @@ const products = [
     detail: "ស្ព្រាយបាញ់សក់ CCR Hair Spray"
   },
   {
-    id: 2,
-    name: "សាប៊ូកក់ និងម៉ាសសក់ VIP 5in1 CCR",
+    id: 4,
+    name: "សាប៊ូកក់&ម៉ាសសក់ VIP 5in1 CCR",
     price: 16,
     category: "Hair",
     image: "images/products/hair/សក់និងម៉ាស 5in1.png",
-    detail: "VIP 5in1 CCR"
-  },
-  {
-    id: 3,
-    name: "សាប៊ូកក់ និងម៉ាសសក់ Premium CCR",
-    price: 16,
-    category: "Hair",
-    image: "images/products/hair/សក់និងម៉ាស Premium CCR.png",
-    detail: "Premium CCR"
-  },
-  {
-    id: 4,
-    name: "សាប៊ូកក់ និងម៉ាសសក់ CCR",
-    price: 16,
-    category: "Hair",
-    image: "images/products/hair/សាប៊ូកក់សក់ និងម៉ាសសក់ CCR.png",
-    detail: "CCR"
+    detail: "សាប៊ូកក់ និងម៉ាសសក់ VIP 5in1 CCR"
   },
   {
     id: 5,
+    name: "សាប៊ូកក់&ម៉ាសសក់ Premium CCR",
+    price: 16,
+    category: "Hair",
+    image: "images/products/hair/សក់និងម៉ាស Premium CCR.png",
+    detail: "សាប៊ូកក់ និងម៉ាសសក់ Premium CCR"
+  },
+  {
+    id: 6,
     name: "ប្រេងលាបសក់/សេរ៉ូមសក់ VIP CCR",
     price: 12,
     category: "Hair",
@@ -40,7 +48,7 @@ const products = [
     detail: "ប្រេងលាបសក់ CCR VIP"
   },
   {
-    id: 6,
+    id: 7,
     name: "ឡេលាបខ្លួន Gluta SUDO",
     price: 16,
     category: "Body",
@@ -48,12 +56,12 @@ const products = [
     detail: "ឡេលាបខ្លួន Gluta SUDO"
   },
   {
-    id: 7,
+    id: 8,
     name: "សេរ៉ូមលាបខ្លួន JELY",
     price: 15,
     category: "Body",
     image: "images/products/body/សេរ៉ូមលាបខ្លួន JELY BODY ESSENCE VC WHITENGING.png",
-    detail: "Body Serum JELY"
+    detail: "សេរ៉ូមលាបខ្លួន Body Serum JELY"
   },
   {
     id: 9,
@@ -61,7 +69,7 @@ const products = [
     price: 10,
     category: "Body",
     image: "images/products/body/ស្រ្ពៃក្លៀក និងឡេកលៀត.png",
-    detail: "Deodorant SUDO"
+    detail: "ស្រ្ពៃក្លៀក/ឡេក្លៀក SUDO"
   },
   {
     id: 10,
@@ -69,18 +77,50 @@ const products = [
     price: 12,
     category: "Body",
     image: "images/products/body/សាប៊ូដុសខ្លួនមាសក្លិនទឹកអប់អូតែលផ្កាយ 5.png",
-    detail: "Body Wash CCR"
+    detail: "សាប៊ូដុសខ្លួន CCR (ក្លិនទឹកអប់)"
   },
   {
     id: 11,
-    name: "ក្រដាស់សើម",
+    name: "សាប៊ូដុសខ្លួនកុលាប CCR",
+    price: 12,
+    category: "Body",
+    image: "images/products/body/សាប៊ូដុសខ្លួនកុលាប.png",
+    detail: "សាប៊ូដុសខ្លួនកុលាប BodyWash Rose CCR"
+  },
+  {
+    id: 12,
+    name: "ឡេលាបខ្លួន JELY",
+    price: 15,
+    category: "Body",
+    image: "images/products/body/ឡេលាបខ្លួន JELY BODY LOTION.png",
+    detail: "ឡេលាបខ្លួន BODY LOTION JELY"
+  },
+  {
+    id: 13,
+    name: "សាប៊ូកក់&ដុសខ្លួនក្មេង CCR",
+    price: 12,
+    category: "Body",
+    image: "images/products/body/សាប៊ូកក់សក់និងដុសខ្លួនក្មេង CCR.png",
+    detail: "សាប៊ូកក់ និងដុសខ្លួនក្មេង CCR"
+  },
+  {
+    id: 14,
+    name: "ទឹកអនាម័យស្រ្ដី JELY",
+    price: 12,
+    category: "Body",
+    image: "images/products/body/ទឹកអនាម័យស្រ្ដី JELY.png",
+    detail: "ទឹកអនាម័យស្រ្ដី Feminine Wash​ JELY"
+  },
+  {
+    id: 15,
+    name: "ក្រដាស់សើម CCR",
     price: 10,
     category: "Face",
     image: "images/products/face/ក្រដាស់សើម Remove MakeUp CCR.png",
     detail: "ក្រដាស់សើម Remove MakeUp CCR"
   },
   {
-    id: 12,
+    id: 16,
     name: "សំឡីវីតាមីន JELY Mask Pad",
     price: 15,
     category: "Face",
@@ -88,7 +128,7 @@ const products = [
     detail: "សំឡីវីតាមីន JELY Mask Pad"
   },
   {
-    id: 13,
+    id: 17,
     name: "BB Cream CCR",
     price: 9.5,
     category: "Face",
@@ -96,39 +136,39 @@ const products = [
     detail: "BB Cream CCR"
   },
   {
-    id: 14,
-    name: "SUNSCREEN CCR",
+    id: 18,
+    name: "SUNSCREEN Cream CCR",
     price: 9.5,
     category: "Face",
     image: "images/products/face/SUNSCREEN CCR.png",
-    detail: "Sunscreen CCR"
+    detail: "SUNSCREEN Cream CCR"
   },
   {
-    id: 15,
+    id: 19,
     name: "សាប៊ូមុខ JELY Gluta",
     price: 8.5,
     category: "Face",
     image: "images/products/face/សាប៊ូដុសមុខ JELY Gluta.png",
-    detail: "JELY Gluta"
+    detail: "សាប៊ូមុខ​​​ ​JELY Gluta"
   },
   {
-    id: 16,
-    name: "សាប៊ូមុខ យិនសិន CCR",
+    id: 20,
+    name: "សាប៊ូមុខយិនសិន CCR",
     price: 8.5,
     category: "Face",
     image: "images/products/face/សាប៊ូដុសមុខ យិនសិន CCR.png",
-    detail: "Ginseng CCR"
+    detail: "សាប៊ូមុខយិនសិន Ginseng CCR"
   },
   {
-    id: 17,
+    id: 21,
     name: "CC SERUM JELY",
     price: 15,
     category: "Face",
     image: "images/products/face/CC SERUM JELY.png",
-    detail: "CC Serum JELY"
+    detail: "CC Serum Pink Tone JELY"
   },
   {
-    id: 18,
+    id: 22,
     name: "ឈុតមុខស្អាត JELY",
     price: 25,
     category: "Face",
@@ -136,15 +176,15 @@ const products = [
     detail: "ឈុតមុខស្អាត JELY Essence + Milk + Night Cream"
   },
   {
-    id: 18,
+    id: 23,
     name: "ថ្នាំដុសធ្មេញ CCR",
-    price: 12,
+    price: 10,
     category: "Face",
     image: "images/products/face/ថ្នាំដុសធ្មេញ CCR.png",
     detail: "ថ្នាំដុសធ្មេញ CCR"
   },
-    {
-    id: 18,
+  {
+    id: 24,
     name: "ម៉ាស់បិទមុខ 6D CCR",
     price: 15,
     category: "Face",
@@ -152,7 +192,7 @@ const products = [
     detail: "ម៉ាស់បិទមុខ 6D CCR"
   },
   {
-    id: 19,
+    id: 25,
     name: "ហ្វៃប័រផាសសិន CCR",
     price: 18,
     category: "Drink",
@@ -160,7 +200,7 @@ const products = [
     detail: "ហ្វៃប័រផាសសិន Fiber CCR"
   },
   {
-    id: 20,
+    id: 26,
     name: "កាហ្វេសម្រក CCR",
     price: 18,
     category: "Drink",
