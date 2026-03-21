@@ -213,6 +213,7 @@ let items = [];
 let activeCategory = "All";
 let savedOrders = [];
 let showQrEnabled = true;
+let currentEditRowId = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -247,6 +248,18 @@ const els = {
   shareBtn: $("shareBtn"),
   printArea: $("printArea"),
   toastContainer: $("toastContainer"),
+  productDrawer: $("productDrawer"),
+  drawerOverlay: $("drawerOverlay"),
+  closeProductDrawerBtn: $("closeProductDrawerBtn"),
+  drawerCancelBtn: $("drawerCancelBtn"),
+  drawerSaveBtn: $("drawerSaveBtn"),
+  drawerDeleteBtn: $("drawerDeleteBtn"),
+  drawerEditName: $("drawerEditName"),
+  drawerEditQty: $("drawerEditQty"),
+  drawerEditPrice: $("drawerEditPrice"),
+  drawerEditDiscount: $("drawerEditDiscount"),
+  drawerLineSubtotal: $("drawerLineSubtotal"),
+  drawerPreviewSubtotal: $("drawerPreviewSubtotal"),
 };
 
 const APPS_SCRIPT_URL = (window.APPS_SCRIPT_URL || "").trim();
@@ -390,6 +403,8 @@ function bindActions() {
   els.copyBtn.addEventListener("click", handleCopy);
   els.saveBtn.addEventListener("click", handleSave);
   if (els.shareBtn) els.shareBtn.addEventListener("click", handleShareInvoice);
+
+  bindProductDrawer();
 }
 
 function addItem(productId, qty, price, discount) {
@@ -438,12 +453,18 @@ function renderTable() {
   if (!items.length) {
     els.itemsTableBody.innerHTML = `<tr class="empty-row"><td colspan="6">No products added yet.</td></tr>`;
     els.grandTotal.textContent = formatDisplayMoney(getGrandTotal());
+    if (currentEditRowId !== null) closeProductDrawer();
     return;
   }
 
   els.itemsTableBody.innerHTML = items.map((item) => `
     <tr>
-      <td>${escapeHtml(item.name)}</td>
+      <td>
+        <div class="row-action-inline">
+          <button class="product-name-btn" data-rowid="${item.rowId}" type="button">${escapeHtml(item.name)}</button>
+          <button class="edit-line-btn" data-rowid="${item.rowId}" type="button" aria-label="Edit item">✎</button>
+        </div>
+      </td>
       <td>${item.qty}</td>
       <td>${formatDisplayMoney(item.price)}</td>
       <td>${formatDisplayMoney(item.discount)}</td>
@@ -452,16 +473,130 @@ function renderTable() {
     </tr>
   `).join("");
 
+  attachProductRowActions();
+  els.grandTotal.textContent = formatDisplayMoney(getGrandTotal());
+}
+
+
+function attachProductRowActions() {
   document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const rowId = Number(btn.dataset.rowid);
+      const wasEditing = currentEditRowId === rowId;
       items = items.filter((item) => item.rowId !== rowId);
+      if (wasEditing) closeProductDrawer();
       renderTable();
       toast("Deleted item.", "info");
     });
   });
 
-  els.grandTotal.textContent = formatDisplayMoney(getGrandTotal());
+  document.querySelectorAll(".product-name-btn, .edit-line-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const rowId = Number(btn.dataset.rowid);
+      openProductDrawer(rowId);
+    });
+  });
+}
+
+function bindProductDrawer() {
+  if (els.closeProductDrawerBtn) els.closeProductDrawerBtn.addEventListener("click", closeProductDrawer);
+  if (els.drawerCancelBtn) els.drawerCancelBtn.addEventListener("click", closeProductDrawer);
+  if (els.drawerOverlay) els.drawerOverlay.addEventListener("click", closeProductDrawer);
+
+  [els.drawerEditQty, els.drawerEditPrice, els.drawerEditDiscount, els.drawerEditName].forEach((input) => {
+    if (!input) return;
+    input.addEventListener("input", updateDrawerSubtotalPreview);
+  });
+
+  if (els.drawerSaveBtn) els.drawerSaveBtn.addEventListener("click", saveProductDrawerChanges);
+  if (els.drawerDeleteBtn) els.drawerDeleteBtn.addEventListener("click", deleteCurrentDrawerItem);
+
+  document.addEventListener("keydown", (event) => {
+    if (!els.productDrawer || !els.productDrawer.classList.contains("show")) return;
+    if (event.key === "Escape") closeProductDrawer();
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      saveProductDrawerChanges();
+    }
+  });
+}
+
+function openProductDrawer(rowId) {
+  const item = items.find((entry) => entry.rowId === rowId);
+  if (!item || !els.productDrawer) return;
+
+  currentEditRowId = rowId;
+  if (els.drawerEditName) els.drawerEditName.value = item.name || "";
+  if (els.drawerEditQty) els.drawerEditQty.value = item.qty || 1;
+  if (els.drawerEditPrice) els.drawerEditPrice.value = item.price || 0;
+  if (els.drawerEditDiscount) els.drawerEditDiscount.value = item.discount || 0;
+  updateDrawerSubtotalPreview();
+
+  if (els.drawerOverlay) {
+    els.drawerOverlay.hidden = false;
+    requestAnimationFrame(() => els.drawerOverlay.classList.add("show"));
+  }
+  els.productDrawer.classList.add("show");
+  els.productDrawer.setAttribute("aria-hidden", "false");
+  document.body.classList.add("drawer-open");
+}
+
+function closeProductDrawer() {
+  currentEditRowId = null;
+  if (els.drawerOverlay) {
+    els.drawerOverlay.classList.remove("show");
+    setTimeout(() => {
+      if (!els.drawerOverlay.classList.contains("show")) els.drawerOverlay.hidden = true;
+    }, 240);
+  }
+  if (els.productDrawer) {
+    els.productDrawer.classList.remove("show");
+    els.productDrawer.setAttribute("aria-hidden", "true");
+  }
+  document.body.classList.remove("drawer-open");
+}
+
+function updateDrawerSubtotalPreview() {
+  const qty = Math.max(1, Number(els.drawerEditQty?.value || 1));
+  const price = Math.max(0, Number(els.drawerEditPrice?.value || 0));
+  const discount = Math.max(0, Number(els.drawerEditDiscount?.value || 0));
+  const subtotal = Math.max(0, qty * price - discount);
+  const subtotalText = formatDisplayMoney(subtotal);
+  if (els.drawerLineSubtotal) els.drawerLineSubtotal.textContent = subtotalText;
+  if (els.drawerPreviewSubtotal) els.drawerPreviewSubtotal.textContent = subtotalText;
+}
+
+function saveProductDrawerChanges() {
+  if (currentEditRowId === null) return;
+  const item = items.find((entry) => entry.rowId === currentEditRowId);
+  if (!item) return;
+
+  const name = (els.drawerEditName?.value || "").trim();
+  const qty = Number(els.drawerEditQty?.value || 0);
+  const price = Number(els.drawerEditPrice?.value || 0);
+  const discount = Number(els.drawerEditDiscount?.value || 0);
+
+  if (!name) return toast("Please enter product name.", "error");
+  if (!qty || qty < 1) return toast("QTY must be at least 1.", "error");
+  if (price < 0 || discount < 0) return toast("Price or discount is invalid.", "error");
+
+  item.name = name;
+  item.qty = qty;
+  item.price = price;
+  item.discount = discount;
+  item.subtotal = Math.max(0, qty * price - discount);
+
+  renderTable();
+  openProductDrawer(item.rowId);
+  toast("Product updated.", "success");
+}
+
+function deleteCurrentDrawerItem() {
+  if (currentEditRowId === null) return;
+  items = items.filter((entry) => entry.rowId !== currentEditRowId);
+  closeProductDrawer();
+  renderTable();
+  toast("Deleted item.", "info");
 }
 
 function getItemsTotal() {
