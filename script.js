@@ -1067,7 +1067,7 @@ function buildReceiptHTML() {
 
       <div class="receipt-info"><span>ឈ្មោះ:</span> <strong>${escapeHtml(els.customer.value || "-")}</strong></div>
       <div class="receipt-info"><span>លេខទូរសព្ទ:</span> <strong>${escapeHtml(els.phone.value || "-")}</strong></div>
-      <div class="receipt-info"><span>ទីតាំង:</span> <div>${escapeHtml(province)}${detailAddress !== "-" ? ` : ${escapeHtml(detailAddress)}` : ""}</div></div>
+      <div class="receipt-info"><span>ទីតាំង:</span> <div>${escapeHtml(detailAddress)}${province !== "-" ? ` : ${escapeHtml(province)}` : ""}</div></div>
       <div class="receipt-info"><span>ដឹកជញ្ជូន:</span> <div>${escapeHtml(els.deliveryName.value || "-")}</div></div>
       <div class="receipt-info"><span>Note:</span> <div>${escapeHtml(els.note.value || "-")}</div></div>
 
@@ -1424,7 +1424,7 @@ function buildSummaryText() {
     `..................................................`,
     `ឈ្មោះ:  ${customer}`,
     `លេខទូរសព្ទ: ${phone}`,
-    `ទីតាំង: ${province} | ${detailAddress}`,
+    `ទីតាំង: ${detailAddress} | ${province}`,
     `ដឹកជញ្ជូន:    ${els.deliveryName.value || "-"}`,
     `Note:   ${note}`,
     `..................................................`,
@@ -1440,7 +1440,7 @@ const lines = items.length
         const price = money(it.price);
         const subtotal = money(it.subtotal);
 
-        return `${i + 1}. ${product}\n • ចំនួន: ${qty}   តម្លៃ: ${price}   សរុប: ${subtotal}`;
+        return `${i + 1}. ${product}\n •ចំនួន: ${qty} ឈុត   តម្លៃ: ${price}   សរុប: ${subtotal}`;
       })
       .join("\n\n")
   : `មិនទាន់មានផលិតផល`;
