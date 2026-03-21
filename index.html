@@ -7,7 +7,14 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ 
  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;600;700&display=swap" rel="stylesheet" />
+ 
+
+ 
+
+
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -260,6 +267,64 @@
 
     </div>
   </div>
+
+
+
+<!-- Product Edit Drawer -->
+<div id="drawerOverlay" class="drawer-overlay" hidden></div>
+<aside id="productDrawer" class="product-drawer" aria-hidden="true">
+  <div class="product-drawer-head">
+    <div>
+      <h3>កែផលិតផល</h3>
+      <p>ចុចលើឈ្មោះផលិតផលក្នុងតារាង ដើម្បីកែ QTY / Price / Discount</p>
+    </div>
+    <button id="closeProductDrawerBtn" class="product-drawer-close" type="button" aria-label="Close drawer">✕</button>
+  </div>
+
+  <div class="product-drawer-body">
+    <div class="drawer-summary-card">
+      <span>កែទិន្នន័យផលិតផលដោយមិនចាំបាច់លុបចេញ</span>
+      <strong id="drawerPreviewSubtotal">0.00</strong>
+    </div>
+
+    <div class="drawer-form-grid">
+      <div class="field-group drawer-span-2">
+        <label>ឈ្មោះផលិតផល</label>
+        <input type="text" id="drawerEditName" placeholder="Product name..." />
+      </div>
+
+      <div class="field-group">
+        <label>ចំនួន</label>
+        <input type="number" id="drawerEditQty" min="1" step="1" value="1" />
+      </div>
+
+      <div class="field-group">
+        <label>តម្លៃ</label>
+        <input type="number" id="drawerEditPrice" min="0" step="0.01" value="0" />
+      </div>
+
+      <div class="field-group drawer-span-2">
+        <label>បញ្ចុះតម្លៃ</label>
+        <input type="number" id="drawerEditDiscount" min="0" step="0.01" value="0" />
+      </div>
+    </div>
+
+    <div class="drawer-inline-total">
+      <div class="drawer-total-box">
+        <span>Subtotal</span>
+        <strong id="drawerLineSubtotal">0.00</strong>
+      </div>
+    </div>
+
+    <div class="drawer-actions-row">
+      <button id="drawerDeleteBtn" class="btn drawer-delete-btn" type="button">Delete</button>
+      <div class="drawer-right-actions">
+        <button id="drawerCancelBtn" class="btn drawer-cancel-btn" type="button">Cancel</button>
+        <button id="drawerSaveBtn" class="btn btn-save" type="button">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</aside>
 
 <div id="toastContainer" class="toast-container"></div>
 
