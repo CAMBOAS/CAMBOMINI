@@ -625,8 +625,8 @@ function getSelectedQrMeta() {
 
   const method = (els.payment.value || "").trim().toUpperCase();
   const fileMap = {
-    ABA: { src: "images/qr/ABA.png", name: "CHEA CHANROTHA" },
-    AC: { src: "images/qr/AC.png", name: "CHEA CHANROTHA" }
+    ABA: { src: "../images/qr/ABA.png", name: "CHEA CHANROTHA" },
+    AC: { src: "../images/qr/AC.png", name: "CHEA CHANROTHA" }
   };
 
   if (!fileMap[method]) return null;
@@ -791,10 +791,10 @@ async function handleSave() {
 function renderInvoiceAreaForCapture() {
   if (!els.printArea) throw new Error("Print area not found.");
 
-  const receiptHTML = buildReceiptHTML();
+  const receiptHTML = buildShareReceiptHTML();
   els.printArea.style.display = "block";
   els.printArea.innerHTML = `
-    <style id="captureReceiptStyles">${getReceiptPrintStyles()}</style>
+    <style id="captureReceiptStyles">${getShareReceiptStyles()}</style>
     <div class="share-capture-stage">
       <div id="invoiceArea" class="share-capture-shell">
         ${receiptHTML}
@@ -895,17 +895,25 @@ async function captureInvoiceBlob() {
 
   await inlineInvoiceImages(invoiceArea);
 
+  const captureHeight = Math.max(200, Math.ceil(invoiceArea.scrollHeight || invoiceArea.offsetHeight || 0));
+
   let lastError = null;
 
   try {
     const canvas = await html2canvas(invoiceArea, {
+      width: 1080,
+      height: captureHeight,
       scale: Math.max(2, Math.min(window.devicePixelRatio || 1, 3)),
       useCORS: true,
       allowTaint: false,
       backgroundColor: "#ffffff",
       logging: false,
       imageTimeout: 0,
-      foreignObjectRendering: false
+      foreignObjectRendering: false,
+      windowWidth: 1080,
+      windowHeight: captureHeight,
+      scrollX: 0,
+      scrollY: 0
     });
 
     const blob = await new Promise((resolve, reject) => {
@@ -1005,6 +1013,368 @@ function clearOrderForm() {
   syncQrToggleButton();
   setToday();
   cleanupInvoiceCaptureArea();
+}
+
+function buildShareReceiptHTML() {
+  const province = (els.province?.value || "").trim();
+  const detailAddress = (els.addressDetail?.value || "").trim();
+  const fullAddress = [detailAddress, province].filter(Boolean).join(" : ") || "-";
+  const deliveryFee = Math.max(0, Number(els.deliveryFee?.value || 0));
+  const itemsTotal = getItemsTotal();
+  const grand = itemsTotal + deliveryFee;
+  const grandRiel = Math.round(grand * 4100);
+  const paymentText = (els.payment?.value || "-").trim() || "-";
+  const pageText = (els.page?.value || "-").trim() || "-";
+  const closeByText = (els.closeBy?.value || "-").trim() || "-";
+  const noteText = (els.note?.value || "-").trim() || "-";
+  const customerText = (els.customer?.value || "-").trim() || "-";
+  const phoneText = (els.phone?.value || "-").trim() || "-";
+  const deliveryNameText = (els.deliveryName?.value || "-").trim() || "-";
+  const dateText = formatDateKH(els.date?.value);
+  const receiptNo = getReceiptNoValue();
+  const qrMeta = getSelectedQrMeta();
+  const hasBottomBlock = !!(qrMeta || receiptNo);
+
+  const rows = items.map((it, i) => `
+    <div class="share-item-row">
+      <div class="share-col-product">${i + 1}. ${escapeHtml(it.name)}</div>
+      <div class="share-col-qty">${escapeHtml(String(it.qty))} ឈុត</div>
+      <div class="share-col-price">${escapeHtml(formatDisplayMoney(it.price))}</div>
+      <div class="share-col-subtotal">${escapeHtml(formatDisplayMoney(it.subtotal))}</div>
+    </div>
+  `).join("");
+
+  const bottomBlock = hasBottomBlock ? `
+    <div class="share-dash share-bottom-separator"></div>
+    <div class="share-bottom-grid ${!qrMeta ? 'no-qr' : ''} ${!receiptNo ? 'no-number' : ''}">
+      ${qrMeta ? `
+        <div class="share-qr-side">
+          <div class="share-qr-box">
+            <img class="share-qr-image" src="${escapeHtml(getAssetUrl(qrMeta.src))}" alt="${escapeHtml(qrMeta.label)} QR Code" />
+          </div>
+          <div class="share-qr-label">${escapeHtml(qrMeta.label)}</div>
+          ${qrMeta.name ? `<div class="share-qr-name">${escapeHtml(qrMeta.name)}</div>` : ""}
+        </div>
+      ` : ""}
+      ${receiptNo ? `
+        <div class="share-receipt-side">
+          <div class="share-receipt-number">${escapeHtml(receiptNo)}</div>
+        </div>
+      ` : ""}
+    </div>
+  ` : `<div class="share-tail-space"></div>`;
+
+  return `
+    <div class="share-poster ${hasBottomBlock ? 'has-bottom-block' : 'trim-bottom'}">
+      <div class="share-content">
+        <div class="share-head">
+          <div class="share-title">វិក័យប័ត្រ</div>
+          <div class="share-date">កាលបរិច្ឆេទ: ${escapeHtml(dateText)}</div>
+        </div>
+
+        <div class="share-dash"></div>
+
+        <div class="share-info-grid">
+          <div class="share-info-labels">
+            <div>ឈ្មោះ:</div>
+            <div>លេខទូរសព្ទ:</div>
+            <div>ទីតាំង</div>
+            <div>អ្នកដឹកជញ្ជូន</div>
+            <div>Note:</div>
+          </div>
+          <div class="share-info-values">
+            <div>${escapeHtml(customerText)}</div>
+            <div>${escapeHtml(phoneText)}</div>
+            <div>${escapeHtml(fullAddress)}</div>
+            <div>${escapeHtml(deliveryNameText)}</div>
+            <div>${escapeHtml(noteText)}</div>
+          </div>
+        </div>
+
+        <div class="share-dash"></div>
+
+        <div class="share-table-head">
+          <div class="share-col-product">ផលិតផល</div>
+          <div class="share-col-qty">ចំនួន</div>
+          <div class="share-col-price">តម្លៃ</div>
+          <div class="share-col-subtotal">សរុប</div>
+        </div>
+        <div class="share-table-line"></div>
+        <div class="share-items-wrap">${rows}</div>
+
+        <div class="share-dash"></div>
+
+        <div class="share-total-row"><span>ការទូទាត់</span><span>${escapeHtml(formatDisplayMoney(itemsTotal))}</span></div>
+        <div class="share-total-row"><span>សេវាដឹក</span><span>${deliveryFee === 0 ? 'ហ្វ្រីដឹក' : escapeHtml(formatDisplayMoney(deliveryFee))}</span></div>
+        <div class="share-pay-row">
+          <div class="share-pay-left">ការទូទាត់ <strong>${escapeHtml(paymentText)}</strong></div>
+          <div class="share-grand-wrap">
+            <div class="share-grand-total">${escapeHtml(formatDisplayMoney(grand))}</div>
+          </div>
+        </div>
+        <div class="share-riel-row"><span>ប្រាក់រៀល</span><span>${escapeHtml(grandRiel.toLocaleString())}៛</span></div>
+
+        <div class="share-dash"></div>
+
+        <div class="share-mini-meta">Page: ${escapeHtml(pageText)} | CloseBy: ${escapeHtml(closeByText)}</div>
+        <div class="share-service-row">
+          <span>លេខបម្រើអតិថិជន:</span>
+          <span>015 58 68 78 / 089 58 68 78</span>
+        </div>
+
+        ${bottomBlock}
+      </div>
+    </div>
+  `;
+}
+
+function getShareReceiptStyles() {
+  return `
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #ffffff; }
+    body {
+      font-family: "Kantumruy Pro", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      color: #045f80;
+    }
+    .share-capture-stage {
+      width: fit-content;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+    .share-capture-shell,
+    .share-poster {
+      width: 1080px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+    .share-content {
+      width: 1080px;
+      position: relative;
+      z-index: 2;
+      padding: 54px 50px 50px;
+      display: flex;
+      flex-direction: column;
+    }
+    .trim-bottom .share-content {
+      padding-bottom: 50px;
+    }
+    .share-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .share-title {
+      font-size: 100px;
+      font-weight: 800;
+      line-height: 0.88;
+      color: #045f80;
+      letter-spacing: 0;
+    }
+    .share-date {
+      padding-top: 18px;
+      font-size: 27px;
+      font-weight: 500;
+      color: #9ab6c4;
+      white-space: nowrap;
+    }
+    .share-dash {
+      margin: 26px 0 18px;
+      border-top: 2px dashed #5f99ae;
+    }
+    .share-info-grid {
+      display: grid;
+      grid-template-columns: 245px minmax(0, 1fr);
+      gap: 8px 36px;
+      font-size: 34px;
+      line-height: 1.26;
+      color: #045f80;
+    }
+    .share-info-labels,
+    .share-info-values {
+      display: grid;
+      gap: 5px;
+    }
+    .share-info-labels,
+    .share-info-values { font-weight: 500; }
+    .share-table-head,
+    .share-item-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 130px 130px 130px;
+      column-gap: 16px;
+      align-items: start;
+    }
+    .share-table-head {
+      color: #045f80;
+      font-size: 31px;
+      font-weight: 800;
+      padding: 0 0 6px;
+    }
+    .share-table-line {
+      border-top: 4px solid #045f80;
+      margin-bottom: 10px;
+    }
+    .share-item-row {
+      padding: 8px 0;
+      color: #045f80;
+      font-size: 28px;
+      line-height: 1.28;
+    }
+    .share-col-product {
+      text-align: left;
+      padding-right: 8px;
+      word-break: break-word;
+    }
+    .share-col-qty,
+    .share-col-price,
+    .share-col-subtotal {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .share-total-row,
+    .share-pay-row,
+    .share-riel-row,
+    .share-service-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      color: #045f80;
+      font-size: 28px;
+      line-height: 1.25;
+    }
+    .share-total-row { margin: 4px 0; }
+    .share-pay-row { margin-top: 10px; }
+    .share-pay-left {
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    .share-pay-left strong {
+      display: inline-block;
+      margin-left: 16px;
+      font-size: 50px;
+      line-height: 0.95;
+      font-weight: 800;
+    }
+    .share-grand-wrap {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .share-grand-label {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .share-grand-total {
+      font-size: 45px;
+      line-height: 0.95;
+      font-weight: 800;
+    }
+    .share-riel-row {
+      margin-top: 10px;
+      font-size: 25px;
+      color: #2c7f9c;
+    }
+    .share-mini-meta {
+      color: #2c7f9c;
+      font-size: 24px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .share-service-row {
+      font-size: 24px;
+      color: #2c7f9c;
+      align-items: center;
+    }
+    .share-bottom-separator {
+      margin-top: 18px;
+      margin-bottom: 20px;
+    }
+    .share-bottom-grid {
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+      column-gap: 36px;
+      align-items: end;
+      min-height: 500px;
+    }
+    .share-bottom-grid.no-qr {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .share-bottom-grid.no-number {
+      grid-template-columns: 430px;
+      justify-content: start;
+    }
+    .share-qr-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .share-qr-box {
+      width: 470px;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: transparent;
+    }
+    .share-qr-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .share-qr-label {
+      margin-top: 16px;
+      font-size: 76px;
+      line-height: 0.96;
+      font-weight: 800;
+      color: #045f80;
+      text-align: center;
+    }
+    .share-qr-name {
+      margin-top: 6px;
+      font-size: 44px;
+      line-height: 1.08;
+      font-weight: 800;
+      color: #045f80;
+      text-align: center;
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+    .share-receipt-side {
+      min-height: 470px;
+      border-left: 2px dashed #5f99ae;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 26px;
+      padding-bottom: 20px;
+    }
+    .share-bottom-grid.no-qr .share-receipt-side {
+      border-left: none;
+      padding-left: 0;
+      justify-content: flex-start;
+    }
+    .share-receipt-number {
+      font-size: 190px;
+      line-height: 0.88;
+      font-weight: 800;
+      color: #045f80;
+      font-variant-numeric: tabular-nums;
+    }
+    .share-tail-space {
+      height: 50px;
+    }
+  `;
 }
 
 function buildReceiptHTML() {
@@ -1297,7 +1667,7 @@ function getReceiptPrintStyles() {
       margin-top: 2px;
     }
     .receipt-footer {
-      font-size: 12px;
+      font-size: 14px;
       line-height: 1.35;
     }
     .receipt-phone {
