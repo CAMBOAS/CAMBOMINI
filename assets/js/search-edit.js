@@ -88,6 +88,8 @@ function getFilters() {
   const { startDate, endDate } = getDateRangeFilters();
   return {
     text: qs('searchInput')?.value.trim().toLowerCase() || '',
+    delivery: qs('deliveryFilter')?.value.trim() || '',
+    province: qs('provinceFilter')?.value.trim() || '',
     status: qs('statusFilter')?.value || '',
     page: qs('pageFilter')?.value || '',
     closeBy: qs('closeByFilter')?.value || '',
@@ -131,12 +133,49 @@ function normalizeOrder(order) {
   };
 }
 
+
+function getProvinceGroup(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  const normalized = text.replace(/\s+/g, '');
+  const isPhnomPenh = [
+    'ភ្នំពេញ',
+    'រាជធានីភ្នំពេញ',
+    'រាជធានី(ភ្នំពេញ)',
+    'រាជធានីភ្នំពេញ)',
+    '(ភ្នំពេញ)'
+  ].some(item => normalized === item.replace(/\s+/g, ''));
+  return isPhnomPenh ? 'ភ្នំពេញ' : 'ខេត្ត';
+}
+
+const DELIVERY_FILTER_OPTIONS = [
+  'J&T',
+  'DRSB',
+  'វិរៈ ប៊ុនថាំ',
+  'ភ្នំពេញ តាធំ',
+  'ភ្នំពេញ តាតូច',
+  'ដឹកខ្លួនឯង'
+];
+
 function filterOrders() {
   const filters = getFilters();
   return currentOrders.filter(order => {
     const productNames = (order.products || []).map(p => p.name).join(' ');
-    const hay = [order.id, order.customer, order.phone, order.page, order.closeBy, order.province, order.payment, productNames].join(' ').toLowerCase();
+    const hay = [
+      order.id,
+      order.customer,
+      order.phone,
+      order.page,
+      order.closeBy,
+      order.province,
+      order.deliveryName,
+      order.payment,
+      productNames
+    ].join(' ').toLowerCase();
+
     if (filters.text && !hay.includes(filters.text)) return false;
+    if (filters.delivery && String(order.deliveryName || '').trim() !== filters.delivery) return false;
+    if (filters.province && getProvinceGroup(order.province) !== filters.province) return false;
     if (filters.status && order.status !== filters.status) return false;
     if (filters.page && order.page !== filters.page) return false;
     if (filters.closeBy && order.closeBy !== filters.closeBy) return false;
@@ -146,20 +185,38 @@ function filterOrders() {
 }
 
 function renderFilterOptions() {
-  const pageValues = [...new Set(currentOrders.map(o => o.page).filter(Boolean))].sort();
-  const closeByValues = [...new Set(currentOrders.map(o => o.closeBy).filter(Boolean))].sort();
+  const pageValues = [...new Set(currentOrders.map(o => o.page).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'km'));
+  const closeByValues = [...new Set(currentOrders.map(o => o.closeBy).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'km'));
+
+  const deliveryFilter = qs('deliveryFilter');
+  const provinceFilter = qs('provinceFilter');
   const pageFilter = qs('pageFilter');
   const closeByFilter = qs('closeByFilter');
+
+  const currentDelivery = deliveryFilter?.value || '';
+  const currentProvince = provinceFilter?.value || '';
   const currentPage = pageFilter?.value || '';
   const currentCloseBy = closeByFilter?.value || '';
 
+  if (deliveryFilter) {
+    deliveryFilter.innerHTML = '<option value="">Delivery</option>' + DELIVERY_FILTER_OPTIONS.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    deliveryFilter.value = DELIVERY_FILTER_OPTIONS.includes(currentDelivery) ? currentDelivery : '';
+  }
+  if (provinceFilter) {
+    const provinceOptions = [
+      { value: 'ភ្នំពេញ', label: 'រាជធានីភ្នំពេញ' },
+      { value: 'ខេត្ត', label: 'ខេត្ត' }
+    ];
+    provinceFilter.innerHTML = '<option value="">Province</option>' + provinceOptions.map(v => `<option value="${escapeHtml(v.value)}">${escapeHtml(v.label)}</option>`).join('');
+    provinceFilter.value = provinceOptions.some(v => v.value === currentProvince) ? currentProvince : '';
+  }
   if (pageFilter) {
     pageFilter.innerHTML = '<option value="">All Pages</option>' + pageValues.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    pageFilter.value = currentPage;
+    pageFilter.value = pageValues.includes(currentPage) ? currentPage : '';
   }
   if (closeByFilter) {
     closeByFilter.innerHTML = '<option value="">All CloseBy</option>' + closeByValues.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    closeByFilter.value = currentCloseBy;
+    closeByFilter.value = closeByValues.includes(currentCloseBy) ? currentCloseBy : '';
   }
 }
 
@@ -182,6 +239,8 @@ function buildFilterText() {
   } else if (currentServerMode === 'latest') {
     tags.push('Latest 20 records');
   }
+  if (filters.delivery) tags.push(`Delivery: ${filters.delivery}`);
+  if (filters.province) tags.push(`Province: ${filters.province === 'ភ្នំពេញ' ? 'រាជធានីភ្នំពេញ' : 'ខេត្ត'}`);
   if (filters.status) tags.push(filters.status);
   if (filters.page) tags.push(filters.page);
   if (filters.closeBy) tags.push(filters.closeBy);
@@ -644,7 +703,7 @@ function getShareReceiptStyles() {
     .share-title { font-size: 100px; font-weight: 800; line-height: 0.88; color: #045f80; }
     .share-date { padding-top: 18px; font-size: 27px; font-weight: 500; color: #9ab6c4; white-space: nowrap; }
     .share-dash { margin: 26px 0 18px; border-top: 2px dashed #5f99ae; }
-    .share-info-grid { display: grid; grid-template-columns: 245px minmax(0, 1fr); gap: 8px 36px; font-size: 34px; line-height: 1.26; color: #045f80; }
+    .share-info-grid { display: grid; grid-template-columns: 245px minmax(0, 1fr); gap: 8px 36px; font-size: 42px; line-height: 1.26; color: #045f80; }
     .share-info-labels, .share-info-values { display: grid; gap: 5px; font-weight: 500; }
     .share-table-head, .share-item-row { display: grid; grid-template-columns: minmax(0, 1fr) 130px 130px 130px; column-gap: 16px; align-items: start; }
     .share-table-head { color: #045f80; font-size: 31px; font-weight: 800; padding: 0 0 6px; }
@@ -1157,8 +1216,8 @@ function getPrintDocumentStyles() {
 
     .receipt-bottom {
       display: grid;
-      grid-template-columns: 1fr 18mm;
-      gap: 2mm;
+      grid-template-columns: 30mm minmax(0, 1fr);
+      gap: 2.5mm;
       align-items: stretch;
       margin-top: 1.5mm;
       width: 100%;
@@ -1180,7 +1239,7 @@ function getPrintDocumentStyles() {
 
     .receipt-qr-box {
       width: 100%;
-      max-width: 24mm;
+      max-width: 28mm;
       aspect-ratio: 1 / 1;
       display: flex;
       align-items: center;
@@ -1196,7 +1255,7 @@ function getPrintDocumentStyles() {
 
     .receipt-qr-label {
       margin-top: 1mm;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
       line-height: 1;
       text-align: center;
@@ -1205,7 +1264,7 @@ function getPrintDocumentStyles() {
 
     .receipt-qr-name {
       margin-top: 0.8mm;
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 800;
       line-height: 1.2;
       text-align: center;
@@ -1220,8 +1279,8 @@ function getPrintDocumentStyles() {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 24mm;
-      padding-left: 2mm;
+      min-height: 28mm;
+      padding-left: 2.5mm;
       min-width: 0;
     }
 
